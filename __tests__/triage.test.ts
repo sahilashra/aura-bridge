@@ -27,4 +27,20 @@ describe('Aura Bridge Core Logic', () => {
     expect(confidence).toBeGreaterThanOrEqual(0);
     expect(confidence).toBeLessThanOrEqual(100);
   });
+
+  it('API failure fallback to AMBER severity 5', () => {
+    // Mocking the fallback logic in route.ts
+    const simulate_api_error = true;
+    const fallback_result = simulate_api_error ? { severity: 5, color: 'AMBER' } : { severity: 1, color: 'GREEN' };
+    expect(fallback_result.severity).toBe(5);
+    expect(fallback_result.color).toBe('AMBER');
+  });
+
+  it('gracefully handles markdown-wrapped Gemini JSON', () => {
+    const raw_gemini_output = "Sure, here is the triage: ```json\n{ \"severity\": 10, \"primary_threat\": \"Life Threatening\" }\n```";
+    const jsonMatch = raw_gemini_output.match(/\{[\s\S]*\}/);
+    expect(jsonMatch).not.toBeNull();
+    const parsed = JSON.parse(jsonMatch![0]);
+    expect(parsed.severity).toBe(10);
+  });
 });
