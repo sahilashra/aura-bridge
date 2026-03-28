@@ -14,7 +14,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "AURA BRIDGE | High-Speed Emergency Triage",
-  description: "Universal emergency data bridge transforming messy, unstructured accident data into life-saving actions using Gemini 1.5 Flash.",
+  description: "Universal emergency data bridge transforming messy, unstructured accident data into life-saving actions using Gemini 2.5 Flash.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

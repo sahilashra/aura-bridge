@@ -1,10 +1,18 @@
 # AURA BRIDGE 🚨
 
-**Aura Bridge** is a professional-grade emergency triage platform that transforms chaotic, unstructured input (voice, text, panic photos) into prioritized, structured operations data. 
+Aura Bridge is a Gemini 2.5 Flash-powered emergency triage platform converting unstructured real-world inputs—panicked text, drag-and-drop photos, live voice transcription—into a structured, severity-ranked operations dashboard in under 5 seconds.
+
+Inputs: Free-form text (DOMPurify sanitized), base64 photo uploads with OCR for handwritten medical notes and allergy extraction, and Web Speech API voice transcription with 15-second auto-stop guard.
+
+AI Pipeline: Gemini 2.5 Flash processes multimodal input against a strict JSON schema, returning severity scores (1–10), threat headlines, prioritized checklists, extracted vitals, and paramedic briefs. Regex-based JSON extraction handles markdown-wrapped responses. Full try-catch fallback prevents crashes during live emergencies.
+
+Dashboard: Color-coded circular severity gauge (teal/amber/red), interactive action checklist with completion tracking, extracted vitals panel, and server-side Google Maps incident tile. Reports export as PDF, clipboard copy, or WhatsApp responder transmission.
+
+Security: CSP headers, X-Frame-Options DENY, rate limiting (10 req/min), Maps key server-side only, 5MB image cap. Accessibility: Full aria-labels, role=alert on severity output, WCAG focus rings. Tests: Jest unit tests for severity validation, input handling, image limits.
+
+Google Stack: Gemini 2.5 Flash, Cloud Run, Cloud Build, Maps Static API.
 
 [👉 **View Live Demo**](https://aura-bridge-402185195446.us-central1.run.app)
-
-This project was built during the SuperHack 2025 sprint.
 
 ## 🏛️ Architecture & Services
 ```mermaid
