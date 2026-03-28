@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   CheckCircle2, 
   MapPin, 
@@ -8,9 +8,14 @@ import {
   Share2, 
   FileDown, 
   AlertTriangle,
-  Info 
+  Info,
+  Copy,
+  RotateCcw
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import jsPDF from 'jspdf';
 
 interface ActionDashboardProps {
   data: {
@@ -21,112 +26,191 @@ interface ActionDashboardProps {
     medic_data: string;
     is_fallback?: boolean;
   };
+  onReset: () => void;
 }
 
-const ActionDashboard: React.FC<ActionDashboardProps> = ({ data }) => {
-  const getSeverityColor = (code: string) => {
-    switch (code) {
-      case "RED": return "text-[#ff0000] border-[#ff0000] bg-red-950/20";
-      case "AMBER": return "text-[#ffaa00] border-[#ffaa00] bg-amber-950/20";
-      case "GREEN": return "text-[#00ff88] border-[#00ff88] bg-emerald-950/20";
-      default: return "text-white border-white bg-slate-900";
-    }
+const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
+  const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
+
+  const toggleCheck = (idx: number) => {
+    const newSet = new Set(checkedItems);
+    if (newSet.has(idx)) newSet.delete(idx);
+    else newSet.add(idx);
+    setCheckedItems(newSet);
   };
 
-  const severityColorClass = getSeverityColor(data.color_code);
+  const getSeverityColorHex = (score: number) => {
+    if (score >= 7) return "#e63946"; // primary red
+    if (score >= 4) return "#f59e0b"; // amber
+    return "#2a9d8f"; // success teal
+  };
+
+  const severityColorHex = getSeverityColorHex(data.severity_score);
 
   const shareToWhatsApp = () => {
-    const text = `⚠️ AURA BRIDGE EMERGENCY ALERT\n\nIncident: ${data.headline}\nSeverity: ${data.severity_score}/10\n\nInstructions:\n${data.instructions.join('\n- ')}\n\nMedic Data: ${data.medic_data}`;
+    const text = `⚠️ AURA BRIDGE EMERGENCY ALERT\n\nIncident: ${data.headline}\nSeverity: ${data.severity_score}/10\n\nInstructions:\n${data.instructions.map((s,i) => `[${checkedItems.has(i)?'x':' '}] ${s}`).join('\n')}\n\nMedic Data:\n${data.medic_data}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
 
+  const copyReport = () => {
+    const text = `AURA BRIDGE EMERGENCY ALERT\nIncident: ${data.headline}\nSeverity: ${data.severity_score}/10\n\nInstructions:\n${data.instructions.map((s,i) => `[${checkedItems.has(i)?'x':' '}] ${s}`).join('\n')}\n\nMedic Data:\n${data.medic_data}`;
+    navigator.clipboard.writeText(text);
+    alert("Report copied to clipboard.");
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setTextColor(230, 57, 70);
+    doc.text("AURA BRIDGE EMERGENCY REPORT", 20, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Incident: ${data.headline}`, 20, 35);
+    doc.text(`Severity Score: ${data.severity_score}/10`, 20, 45);
+    
+    doc.setFontSize(16);
+    doc.text("Action Checklist:", 20, 60);
+    doc.setFontSize(12);
+    let y = 70;
+    data.instructions.forEach((step, idx) => {
+      const status = checkedItems.has(idx) ? "[DONE]" : "[PENDING]";
+      const lines = doc.splitTextToSize(`${status} ${step}`, 170);
+      doc.text(lines, 20, y);
+      y += lines.length * 7;
+    });
+
+    y += 10;
+    doc.setFontSize(16);
+    doc.text("Medic Technical Brief:", 20, y);
+    doc.setFontSize(12);
+    y += 10;
+    const medicLines = doc.splitTextToSize(data.medic_data, 170);
+    doc.text(medicLines, 20, y);
+    
+    doc.save(`AuraBridge_Report_${Date.now()}.pdf`);
+  };
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className={`w-full max-w-2xl bg-[#000000] border-4 p-8 shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-2xl ${severityColorClass.split(' ')[1]}`}
-    >
-      <div className="flex justify-between items-start mb-12">
-        <div>
-          <h2 className="text-sm font-mono tracking-widest uppercase mb-2 text-slate-500">Bridge Recommendation</h2>
-          <h1 className="text-6xl font-black uppercase tracking-tighter leading-none mb-4">
-            {data.headline}
-          </h1>
-          <div className={`px-4 py-2 border-2 inline-block font-black text-2xl skew-x-[-12deg] mb-4 ${severityColorClass.split(' ')[0]} ${severityColorClass.split(' ')[1]}`}>
-            SEVERITY: {data.severity_score}/10
+    <div className="w-full max-w-6xl flex flex-col items-center">
+      <div className="w-full flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Incident Operations View</h2>
+        <button 
+          onClick={onReset}
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm px-4 py-2 border border-surface-border rounded-md bg-surface"
+        >
+          <RotateCcw size={16} /> New Intake
+        </button>
+      </div>
+
+      <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        {/* LEFT COLUMN: Severity & Diagnosis */}
+        <div className="bg-surface border border-surface-border p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
+          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-6">Threat Assessment</h3>
+          <div className="w-48 h-48 mb-6 relative">
+            <CircularProgressbar 
+              value={(data.severity_score / 10) * 100} 
+              text={`${data.severity_score}/10`}
+              styles={buildStyles({
+                pathColor: severityColorHex,
+                textColor: severityColorHex,
+                trailColor: '#1f2937',
+                textSize: '24px',
+              })}
+            />
+            {data.severity_score >= 8 && (
+                <div role="alert" className="absolute -bottom-2 w-full text-center text-xs font-bold bg-[#e63946] text-white py-1 rounded-full animate-pulse">
+                  CRITICAL
+                </div>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold leading-tight text-white mb-2">{data.headline}</h1>
+          {data.is_fallback && (
+            <div className="mt-4 text-[#f59e0b] text-xs font-mono uppercase bg-[#f59e0b]/10 px-3 py-1 rounded">
+               Fallback Rules Engaged
+            </div>
+          )}
+        </div>
+
+        {/* CENTER COLUMN: Action Checklist */}
+        <div className="bg-surface border border-surface-border p-6 rounded-2xl shadow-lg flex flex-col">
+          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-6 flex items-center justify-between">
+            <span>Prioritized Protocol</span>
+            <span className="font-mono text-xs">{checkedItems.size}/{data.instructions.length}</span>
+          </h3>
+          <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+            {data.instructions.map((step, idx) => (
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                onClick={() => toggleCheck(idx)}
+                className={`flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all ${checkedItems.has(idx) ? 'bg-success/10 border-success/30 opacity-70' : 'bg-[#161f33] border-surface-border hover:border-slate-500'}`}
+              >
+                <div className={`mt-0.5 shrink-0 ${checkedItems.has(idx) ? 'text-success' : 'text-slate-500'}`}>
+                  <CheckCircle2 size={24} className={checkedItems.has(idx) ? 'fill-success/20' : ''}/>
+                </div>
+                <p className={`text-sm ${checkedItems.has(idx) ? 'text-slate-400 line-through decoration-slate-500' : 'text-slate-200'}`}>
+                  {step}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
-        <div className={`flex flex-col items-center justify-center w-24 h-24 border-4 rounded-full font-black text-4xl mb-4 ${severityColorClass.split(' ')[0]} ${severityColorClass.split(' ')[1]}`}>
-          {data.severity_score}
-        </div>
-      </div>
 
-      <div className="space-y-6 mb-12">
-        <h3 className="text-xl font-bold uppercase tracking-widest flex items-center gap-2 mb-4 text-white">
-          <ShieldCheck size={28} className="text-[#00ff88]" />
-          Life-Saving Actions
-        </h3>
-        {data.instructions.map((step, idx) => (
-          <motion.div 
-            key={idx}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className={`flex items-start gap-6 p-6 border-l-8 border-[#ffffff] bg-slate-900/40 rounded-r-xl`}
-          >
-            <div className="bg-white text-black font-black text-4xl w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-lg italic">
-              {idx + 1}
+        {/* RIGHT COLUMN: Vitals & Map */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-surface border border-surface-border p-6 rounded-2xl shadow-lg flex-1">
+            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Info size={16} className="text-secondary" /> Extracted Context
+            </h3>
+            <div className="bg-[#161f33] p-4 rounded-xl border border-surface-border text-sm font-mono text-slate-300 h-40 overflow-y-auto">
+              {data.medic_data}
             </div>
-            <p className="text-3xl font-black text-white leading-tight">
-              {step}
-            </p>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="bg-[#111111] p-6 rounded-xl border border-dashed border-slate-700 mb-12">
-        <h4 className="text-sm font-mono uppercase text-slate-500 mb-4 flex items-center gap-2">
-          <Info size={16} /> Medic Technical Brief
-        </h4>
-        <p className="text-xl font-mono text-[#00ff88] bg-[#000000] p-4 border border-[#00ff88]/30 rounded-lg">
-          {data.medic_data}
-        </p>
-      </div>
-
-      {/* Static Map Integration */}
-      <div className="mb-12 border-4 border-slate-800 rounded-2xl overflow-hidden grayscale hover:grayscale-0 transition-all cursor-crosshair">
-        <img 
-          src={`https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=15&size=800x400&scale=2&maptype=roadmap&markers=color:red%7C40.714728,-73.998672&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || 'DUMMY_KEY'}`}
-          alt="Incident Location"
-          className="w-full h-auto brightness-75 contrast-125"
-        />
-        <div className="bg-[#000000] p-3 border-t border-slate-800 flex items-center gap-4">
-          <MapPin size={24} className="text-[#ff0000]" />
-          <span className="font-mono text-xs uppercase tracking-widest text-slate-400">Target Lat/Long: 40.714728, -73.998672 [AUTO-TRIANGULATED]</span>
+          </div>
+          
+          <div className="bg-surface border border-surface-border p-2 rounded-2xl shadow-lg relative overflow-hidden h-48 group">
+             <img 
+              src={`https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=15&size=400x200&scale=2&maptype=roadmap&markers=color:red%7C40.714728,-73.998672&style=feature:all|element:labels.text.fill|color:0x8ec3b9&style=feature:all|element:labels.text.stroke|color:0x1a3646&style=feature:landscape|element:geometry|color:0x2c5a71&style=feature:water|element:geometry|color:0x0e171d&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || 'AIzaSyBMn2-92T4ILzI5TjRSSOzaAqlPXtJOwLc'}`}
+              alt="Incident Location map"
+              className="w-full h-full object-cover rounded-xl transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute bottom-4 left-4 right-4 bg-surface/90 backdrop-blur-sm p-3 border border-surface-border rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin size={16} className="text-primary" />
+                <span className="font-mono text-[10px] text-slate-300">ESTIMATED LOCATION</span>
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-20">
+        <button 
+          onClick={copyReport}
+          className="flex items-center justify-center gap-2 w-full py-4 border border-surface-border bg-surface hover:bg-[#161f33] rounded-xl font-semibold text-slate-300 transition-colors"
+        >
+          <Copy size={20} /> Copy Report Text
+        </button>
+        <button 
+          onClick={downloadPDF}
+          className="flex items-center justify-center gap-2 w-full py-4 border border-surface-border bg-surface hover:bg-[#161f33] rounded-xl font-semibold text-slate-300 transition-colors"
+        >
+          <FileDown size={20} /> Export PDF Log
+        </button>
         <button 
           onClick={shareToWhatsApp}
-          className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-4 rounded-xl flex items-center justify-center gap-2 font-black uppercase text-xl transition-all"
+          className="flex items-center justify-center gap-2 w-full py-4 bg-success hover:bg-[#208276] text-white rounded-xl font-semibold transition-colors shadow-lg shadow-success/20"
         >
-          <Share2 size={24} /> WhatsApp
-        </button>
-        <button 
-          className="w-full bg-white hover:bg-slate-200 text-black py-4 rounded-xl flex items-center justify-center gap-2 font-black uppercase text-xl transition-all"
-        >
-          <FileDown size={24} /> PDF Logs
+          <Share2 size={20} /> Transmit to Responder
         </button>
       </div>
 
-      {data.is_fallback && (
-        <p className="text-center text-[#ffaa00] mt-6 font-mono text-[10px] uppercase">
-          AI ERROR: Raw output bridge engaged. Verification required.
-        </p>
-      )}
-    </motion.div>
+    </div>
   );
 };
 

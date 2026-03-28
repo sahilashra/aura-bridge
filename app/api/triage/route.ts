@@ -1,7 +1,7 @@
 import { model } from "@/lib/gemini";
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const systemPrompt = `
 You are the "Aura Bridge" Emergency Triage AI. 
@@ -24,8 +24,29 @@ STRICT JSON OUTPUT ONLY:
 Note: If 'Penicillin Allergy' is detected, set severity to 9.
 `;
 
+const rateLimitMap = new Map<string, { count: number, timestamp: number }>();
+
 export async function POST(req: Request) {
   try {
+    // Basic Rate Limiting (10 req/min)
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    const now = Date.now();
+    const windowMs = 60 * 1000;
+    
+    if (rateLimitMap.has(ip)) {
+      const record = rateLimitMap.get(ip)!;
+      if (now - record.timestamp < windowMs) {
+        if (record.count >= 10) {
+          return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+        }
+        record.count += 1;
+      } else {
+        rateLimitMap.set(ip, { count: 1, timestamp: now });
+      }
+    } else {
+      rateLimitMap.set(ip, { count: 1, timestamp: now });
+    }
+
     const { input, images } = await req.json();
 
     if (!input && (!images || images.length === 0)) {
@@ -40,21 +61,27 @@ export async function POST(req: Request) {
 
     if (images && images.length > 0) {
       images.forEach((img: { inlineData: { data: string; mimeType: string } }) => {
+        // Size validation (~5MB base64 check)
+        if (img.inlineData.data.length > 5 * 1024 * 1024 * 1.34) {
+             throw new Error("Image payload too large.");
+        }
         contents.push(img);
       });
     }
 
-    const result = await model.generateContent(contents);
-    const responseText = result.response.text();
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: contents }],
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
+    });
 
+    const responseText = result.response.text();
     console.log("Raw Gemini Response:", responseText);
 
     // Schema Validation & Cleanup
     try {
-      // Find JSON block if it exists
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : responseText;
-      const parsedData = JSON.parse(jsonString);
+      const parsedData = JSON.parse(responseText);
 
       // Map the new structured output to what the frontend ActionDashboard expects
       const color_code = parsedData.severity >= 8 ? "RED" : parsedData.severity >= 5 ? "AMBER" : "GREEN";
@@ -69,12 +96,11 @@ export async function POST(req: Request) {
       return NextResponse.json(transformedData);
     } catch (parseError) {
       console.error("JSON Parse Error:", parseError);
-      // Fallback: Return raw text with a generic structure
       return NextResponse.json({
         severity_score: 5,
         color_code: "AMBER",
-        headline: "Analysis in progress",
-        instructions: [responseText.substring(0, 100) + "..."],
+        headline: "Analysis error",
+        instructions: ["Fallback: Raw response parsing failed", responseText.substring(0, 100)],
         medic_data: responseText,
         is_fallback: true
       });

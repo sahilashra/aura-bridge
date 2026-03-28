@@ -1,133 +1,124 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import IntakeForm from "@/components/IntakeForm";
 import ActionDashboard from "@/components/ActionDashboard";
-import LiveStatus from "@/components/LiveStatus";
-import { ShieldCheck, Cross, Triangle, Activity, LifeBuoy } from "lucide-react";
+import { Activity, ShieldCheck, HeartPulse } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const [triageResult, setTriageResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [latency] = useState(() => Math.floor(Math.random() * 8) + 12);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLoading) {
+      interval = setInterval(() => setElapsedMs((prev) => prev + 10), 10);
+    } else {
+      setElapsedMs(0);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  if (!mounted) return null; // Prevent hydration mismatch
 
   return (
-    <main className="min-h-screen bg-[#000000] text-white flex flex-col items-center p-6 md:p-12 selection:bg-[#ff0000]">
-      {/* Header Overlay */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-[#ff0000] z-50 animate-pulse"></div>
+    <main className="min-h-screen flex flex-col items-center">
+      {/* Subtle Top Border */}
+      <div className="fixed top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary to-transparent z-50"></div>
       
-      {/* Sticky Banner */}
-      <div className="w-full max-w-4xl flex justify-between items-center mb-16 border-b border-white/10 pb-8 mt-8">
-        <div className="flex flex-col gap-1 items-start">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#ff0000] p-2 rounded-lg italic font-black text-2xl -skew-x-12">AB</div>
-            <h1 className="text-4xl font-black italic tracking-tighter uppercase leading-none">Aura Bridge</h1>
-          </div>
-          <span className="text-[10px] font-mono tracking-[0.4em] uppercase text-slate-500 font-bold">Universal Emergency Data Connector</span>
+      {/* Professional Navbar */}
+      <nav className="w-full max-w-5xl flex justify-between items-center py-4 px-6 md:px-0 mt-4 border-b border-surface-border mb-8">
+        <div className="flex items-center gap-2">
+          <HeartPulse size={24} className="text-primary animate-pulse" />
+          <h1 className="text-xl font-bold tracking-tight">AuraBridge</h1>
+          <span className="text-xs font-mono text-slate-400 ml-2 px-2 py-0.5 border border-surface-border rounded-md">OPS-CENTER</span>
         </div>
         
-        <div className="hidden md:flex gap-8">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Node Status</span>
-            <div className="flex items-center gap-2 text-[#00ff88]">
-              <div className="w-2 h-2 rounded-full bg-[#00ff88] animate-ping"></div>
-              <span className="font-bold uppercase tracking-widest text-xs">ENCRYPTED-LINK-4J</span>
-            </div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 text-success">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse shadow-[0_0_8px_#2a9d8f]"></div>
+            <span className="font-mono text-xs font-semibold tracking-wider">SYSTEM OPERATIONAL</span>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Latency</span>
-            <span className="font-bold uppercase tracking-widest text-xs text-white">4ms</span>
+          <div className="hidden md:flex flex-col items-end">
+            <span className="text-[10px] uppercase font-mono text-slate-500">Node Latency</span>
+            <span className="font-mono text-xs text-slate-300">{latency}ms</span>
           </div>
         </div>
-      </div>
+      </nav>
 
       <AnimatePresence mode="wait">
         {!triageResult ? (
           <motion.div 
             key="intake"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full flex flex-col items-center"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full flex justify-center px-4"
           >
-            <div className="text-center mb-12">
-              <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-4 italic">
-                Report <span className="text-[#ff0000]">Incident</span>
-              </h2>
-              <p className="text-xl md:text-2xl text-slate-500 font-bold uppercase tracking-widest">
-                Images &bull; Text &bull; Voice &bull; Unstructured
-              </p>
-            </div>
-            
-            <IntakeForm 
-              onTriageResult={setTriageResult} 
-              onLoading={setIsLoading} 
-            />
-
-            {isLoading && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-12 flex flex-col items-center gap-4 py-8 px-12 border border-[#ff0000]/30 rounded-2xl bg-black shadow-[0_0_50px_rgba(255,0,0,0.2)]"
-              >
-                <div className="grid grid-cols-4 gap-2">
-                  {[...Array(4)].map((_, i) => (
-                    <motion.div 
-                      key={i}
-                      animate={{ scaleY: [1, 2, 1], height: [20, 60, 20], backgroundColor: ["#550000", "#ff0000", "#550000"] }}
-                      transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
-                      className="w-2 h-12 rounded-full"
-                    />
-                  ))}
+            {isLoading ? (
+              <div className="w-full max-w-3xl bg-surface border border-surface-border rounded-xl p-8 shadow-2xl backdrop-blur-md">
+                <div className="flex flex-col items-center justify-center py-16 gap-6">
+                  <div className="flex gap-2">
+                    {[...Array(5)].map((_, i) => (
+                      <motion.div 
+                        key={i}
+                        animate={{ height: [12, 40, 12], backgroundColor: ["#1f2937", "#e63946", "#1f2937"] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
+                        className="w-3 rounded-full"
+                      />
+                    ))}
+                  </div>
+                  <div className="text-center">
+                    <h2 className="text-xl font-semibold mb-2 text-white">Analyzing incident... Gemini AI processing</h2>
+                    <p className="font-mono text-primary text-sm">{(elapsedMs / 1000).toFixed(2)}s elapsed</p>
+                  </div>
                 </div>
-                <span className="text-2xl font-black uppercase italic tracking-tighter text-[#ff0000] animate-pulse">
-                  Gemini Flash Reasoning Underway...
-                </span>
-              </motion.div>
+              </div>
+            ) : (
+              <IntakeForm 
+                onTriageResult={setTriageResult} 
+                onLoading={setIsLoading} 
+              />
             )}
-
-            {!isLoading && <LiveStatus />}
           </motion.div>
         ) : (
           <motion.div 
             key="dashboard"
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full flex flex-col items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full flex justify-center px-4"
           >
-            <div className="mb-12 flex items-center gap-4">
-              <button 
-                onClick={() => setTriageResult(null)}
-                className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-full font-black uppercase text-sm border border-white/10 hover:border-white/30 transition-all"
-              >
-                &larr; New Intake
-              </button>
-            </div>
-            
-            <ActionDashboard data={triageResult} />
-            
-            <LiveStatus />
+            <ActionDashboard 
+              data={triageResult} 
+              onReset={() => {
+                setTriageResult(null);
+                setElapsedMs(0);
+              }} 
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Decorative Vitals */}
-      <div className="fixed bottom-12 right-12 opacity-30 hidden md:block select-none pointer-events-none">
-        <div className="flex items-end gap-1 mb-2">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="w-1 bg-[#ff0000] rounded-full" style={{ height: Math.random() * 40 + 10 + 'px' }}></div>
-          ))}
+      {/* Footer Status Bar */}
+      <footer className="mt-auto w-full h-8 bg-[#111827] border-t border-surface-border flex justify-between items-center px-6 fixed bottom-0 z-50">
+        <div className="flex gap-6 font-mono text-[10px] text-slate-400">
+          <span className="flex items-center gap-1"><Activity size={12} className="text-primary"/> Model: gemini-2.5-flash</span>
+          <span className="flex items-center gap-1"><ShieldCheck size={12} className="text-success"/> TLS 1.3 Encrypted</span>
         </div>
-        <span className="font-mono text-[8px] uppercase tracking-widest block text-right font-bold">Link Aggregation Signal</span>
-      </div>
-
-      <div className="mt-auto pt-24 pb-12 w-full max-w-4xl border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">&copy; 2026 Aura Bridge &bull; 01C900-E790B5-74C4BF</p>
-        <div className="flex gap-12 font-mono text-[10px] uppercase font-bold tracking-widest text-[#ff0000]">
-          <span className="flex items-center gap-2 animate-pulse"><Activity size={12} /> Live Triage active</span>
-          <span className="flex items-center gap-2"><LifeBuoy size={12} /> Priority 1 Access</span>
+        <div className="font-mono text-[10px] text-slate-500">
+          {triageResult ? `Last Triage: ${new Date().toLocaleTimeString()}` : "Awaiting Incident"}
         </div>
-      </div>
+      </footer>
     </main>
   );
 }

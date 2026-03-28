@@ -41,7 +41,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
-      <body className="font-sans min-h-screen bg-black overflow-x-hidden">
+      <body className="font-sans min-h-screen bg-[#0a0e1a] overflow-x-hidden text-white">
         {children}
       </body>
     </html>
