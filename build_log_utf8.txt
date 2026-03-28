@@ -1,0 +1,200 @@
+﻿------------------------- REMOTE BUILD OUTPUT --------------------------
+starting build "9156e5a8-e504-46fb-ba83-c04dce4ae1b0"
+FETCHSOURCE
+Fetching storage object: gs://run-sources-promptwars-491507-us-central1/services/aura-bridge/1774679848.238379-58b8138c10a8437c8aabc2a598bafd9a.zip#1774679849377100
+Copying gs://run-sources-promptwars-491507-us-central1/services/aura-bridge/1774679848.238379-58b8138c10a8437c8aabc2a598bafd9a.zip#1774679849377100...
+/ [0 files][    0.0 B/ 73.7 KiB]                                                
+/ [1 files][ 73.7 KiB/ 73.7 KiB]
+Operation completed over 1 objects/73.7 KiB.
+Archive:  /tmp/source-archive.zip
+   creating: /workspace/app/
+   creating: /workspace/components/
+   creating: /workspace/lib/
+   creating: /workspace/public/
+   creating: /workspace/app/api/
+   creating: /workspace/app/api/triage/
+  inflating: /workspace/AGENTS.md
+  inflating: /workspace/CLAUDE.md
+  inflating: /workspace/eslint.config.mjs
+  inflating: /workspace/next.config.ts
+  inflating: /workspace/package-lock.json
+  inflating: /workspace/package.json
+  inflating: /workspace/postcss.config.mjs
+  inflating: /workspace/README.md
+  inflating: /workspace/tsconfig.json
+  inflating: /workspace/app/favicon.ico
+  inflating: /workspace/app/globals.css
+  inflating: /workspace/app/layout.tsx
+  inflating: /workspace/app/page.tsx
+  inflating: /workspace/app/api/triage/route.ts
+  inflating: /workspace/components/ActionDashboard.tsx
+  inflating: /workspace/components/IntakeForm.tsx
+  inflating: /workspace/components/LiveStatus.tsx
+  inflating: /workspace/lib/gemini.ts
+  inflating: /workspace/public/file.svg
+  inflating: /workspace/public/globe.svg
+  inflating: /workspace/public/next.svg
+  inflating: /workspace/public/vercel.svg
+  inflating: /workspace/public/window.svg
+BUILD
+Starting Step #0 - "pre-buildpack"
+Step #0 - "pre-buildpack": Pulling image: us-central1-docker.pkg.dev/serverless-runtimes/utilities/buildpack-shim:base_20260226_18_04_RC00
+Step #0 - "pre-buildpack": base_20260226_18_04_RC00: Pulling from serverless-runtimes/utilities/buildpack-shim
+Step #0 - "pre-buildpack": Digest: sha256:a5dd0e0a99ed0c8863989f7f392d6aa0d1b6f7d9e579ed1fea765a09126c93e6
+Step #0 - "pre-buildpack": Status: Downloaded newer image for us-central1-docker.pkg.dev/serverless-runtimes/utilities/buildpack-shim:base_20260226_18_04_RC00
+Step #0 - "pre-buildpack": us-central1-docker.pkg.dev/serverless-runtimes/utilities/buildpack-shim:base_20260226_18_04_RC00
+Step #0 - "pre-buildpack": Preparing directory /layers
+Step #0 - "pre-buildpack": Preparing directory /workspace
+Step #0 - "pre-buildpack": Preparing directory /builder/home
+Step #0 - "pre-buildpack": Preparing directory /builder/outputs
+Step #0 - "pre-buildpack": Preparing directory /platform/env
+Step #0 - "pre-buildpack": Passing build environment variable BUILDER_OUTPUT to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_LABEL_BUILDER_VERSION to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_LABEL_BUILDER_IMAGE to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_LABEL_RUN_IMAGE to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_LABEL_SOURCE to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_USE_SERVERLESS_RUNTIMES_TARBALLS to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_RUNTIME_IMAGE_REGION to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_BUILD_ENV to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_BUILD_UNIVERSE to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_TPC_TARBALL_PROJECT to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_TPC_HOSTNAME to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable X_GOOGLE_SET_NODE_HEAP_SIZE to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_LABEL_BUILD_ID to buildpacks
+Step #0 - "pre-buildpack": Passing build environment variable GOOGLE_LABEL_BASE_IMAGE to buildpacks
+Finished Step #0 - "pre-buildpack"
+Starting Step #1 - "build"
+Step #1 - "build": Pulling image: us-central1-docker.pkg.dev/serverless-runtimes/google-24-full/builder/universal:universal_builder_20260318_RC00
+Step #1 - "build": universal_builder_20260318_RC00: Pulling from serverless-runtimes/google-24-full/builder/universal
+Step #1 - "build": a3629ac5b9f4: Already exists
+Step #1 - "build": 7b5a0e8dd3f8: Already exists
+Step #1 - "build": 984bb9ade383: Already exists
+Step #1 - "build": 1726c775de0b: Pulling fs layer
+Step #1 - "build": fe0a88c014e5: Pulling fs layer
+Step #1 - "build": b1fd759501bc: Pulling fs layer
+Step #1 - "build": 7097b7406b08: Pulling fs layer
+Step #1 - "build": f72b19ac55fb: Pulling fs layer
+Step #1 - "build": cf61c145d95d: Pulling fs layer
+Step #1 - "build": 01bf35e32f5c: Pulling fs layer
+Step #1 - "build": 4f4fb700ef54: Pulling fs layer
+Step #1 - "build": 01bf35e32f5c: Waiting
+Step #1 - "build": 4f4fb700ef54: Waiting
+Step #1 - "build": fe0a88c014e5: Download complete
+Step #1 - "build": cf61c145d95d: Verifying Checksum
+Step #1 - "build": cf61c145d95d: Download complete
+Step #1 - "build": f72b19ac55fb: Verifying Checksum
+Step #1 - "build": f72b19ac55fb: Download complete
+Step #1 - "build": 7097b7406b08: Verifying Checksum
+Step #1 - "build": 7097b7406b08: Download complete
+Step #1 - "build": 1726c775de0b: Verifying Checksum
+Step #1 - "build": 1726c775de0b: Download complete
+Step #1 - "build": 4f4fb700ef54: Verifying Checksum
+Step #1 - "build": 4f4fb700ef54: Download complete
+Step #1 - "build": 01bf35e32f5c: Verifying Checksum
+Step #1 - "build": 01bf35e32f5c: Download complete
+Step #1 - "build": b1fd759501bc: Verifying Checksum
+Step #1 - "build": b1fd759501bc: Download complete
+Step #1 - "build": 1726c775de0b: Pull complete
+Step #1 - "build": fe0a88c014e5: Pull complete
+Step #1 - "build": b1fd759501bc: Pull complete
+Step #1 - "build": 7097b7406b08: Pull complete
+Step #1 - "build": f72b19ac55fb: Pull complete
+Step #1 - "build": cf61c145d95d: Pull complete
+Step #1 - "build": 01bf35e32f5c: Pull complete
+Step #1 - "build": 4f4fb700ef54: Pull complete
+Step #1 - "build": Digest: sha256:a1436a39e01b31b2397e67315860ccdf3976f69fa490af0e566b4dd3788de822
+Step #1 - "build": Status: Downloaded newer image for us-central1-docker.pkg.dev/serverless-runtimes/google-24-full/builder/universal:universal_builder_20260318_RC00
+Step #1 - "build": us-central1-docker.pkg.dev/serverless-runtimes/google-24-full/builder/universal:universal_builder_20260318_RC00
+Step #1 - "build": Warning: No cached data will be used, no cache specified.
+Step #1 - "build": ===> ANALYZING
+Step #1 - "build": Image with name "us-central1-docker.pkg.dev/promptwars-491507/cloud-run-source-deploy/aura-bridge:latest" not found
+Step #1 - "build": ===> DETECTING
+Step #1 - "build": target distro name/version labels not found, reading /etc/os-release file
+Step #1 - "build": 3 of 5 buildpacks participating
+Step #1 - "build": google.nodejs.runtime    1.0.0
+Step #1 - "build": google.nodejs.npm        1.1.1
+Step #1 - "build": google.utils.label-image 0.0.2
+Step #1 - "build": ===> RESTORING
+Step #1 - "build": Skipping buildpack layer analysis
+Step #1 - "build": ===> BUILDING
+Step #1 - "build": target distro name/version labels not found, reading /etc/os-release file
+Step #1 - "build": === Node.js - Runtime Using Runner (google.nodejs.runtime@1.0.0) ===
+Step #1 - "build": Nodejs version not specified, using the latest available Nodejs runtime for the stack "ubuntu2404"
+Step #1 - "build": Resolved version 24.14.0 for Node.js from region us-central1
+Step #1 - "build": ***** CACHE MISS: "nodejs"
+Step #1 - "build": Installing Node.js v24.14.0.
+Step #1 - "build": Runtime successfully downloaded from us-central1-docker.pkg.dev/serverless-runtimes/runtimes-ubuntu2404/nodejs:24.14.0
+Step #1 - "build": Installing the heapsize.sh exec.d script.
+Step #1 - "build": === Node.js - Npm Using Runner (google.nodejs.npm@1.1.1) ===
+Step #1 - "build": ***** CACHE MISS: "npm_modules"
+Step #1 - "build": Installing application dependencies.
+Step #1 - "build": --------------------------------------------------------------------------------
+Step #1 - "build": Running "npm ci --quiet --no-fund --no-audit (NODE_ENV=development)"
+Step #1 - "build":
+Step #1 - "build": added 371 packages in 18s
+Step #1 - "build": Done "npm ci --quiet --no-fund --no-audit (NODE_ENV=development)" (18.522948993s)
+Step #1 - "build": --------------------------------------------------------------------------------
+Step #1 - "build": Running "npm run build"
+Step #1 - "build":
+Step #1 - "build": > aura-bridge@0.1.0 build
+Step #1 - "build": > next build
+Step #1 - "build":
+Step #1 - "build": Attention: Next.js now collects completely anonymous telemetry regarding usage.
+Step #1 - "build": This information is used to shape Next.js' roadmap and prioritize features.
+Step #1 - "build": You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+Step #1 - "build": https://nextjs.org/telemetry
+Step #1 - "build":
+Step #1 - "build": ? Next.js 16.2.1 (Turbopack)
+Step #1 - "build":
+Step #1 - "build":   Creating an optimized production build ...
+Step #1 - "build": ? Compiled successfully in 10.4s
+Step #1 - "build":   Running TypeScript ...
+Step #1 - "build":   Finished TypeScript in 5.3s ...
+Step #1 - "build":   Collecting page data using 1 worker ...
+Step #1 - "build": Error: GEMINI_API_KEY environment variable is not defined
+Step #1 - "build":     at module evaluation (.next/server/edge/chunks/[root-of-the-server]__0lc8i-6._.js:12:74774)
+Step #1 - "build":
+Step #1 - "build": > Build error occurred
+Step #1 - "build": Error: Failed to collect page data for /api/triage
+Step #1 - "build":     at ignore-listed frames {
+Step #1 - "build":   type: 'Error'
+Step #1 - "build": }
+Step #1 - "build": Done "npm run build" (17.931274051s)
+Step #1 - "build": --------------------------------------------------------------------------------
+Step #1 - "build": failed to build: (error ID: 1a2262f3):
+Step #1 - "build": > aura-bridge@0.1.0 build
+Step #1 - "build": > next build
+Step #1 - "build":
+Step #1 - "build": Attention: Next.js now collects completely anonymous telemetry regarding usage.
+Step #1 - "build": This information is used to shape Next.js' roadmap and prioritize features.
+Step #1 - "build": You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+Step #1 - "build": https://nextjs.org/telemetry
+Step #1 - "build":
+Step #1 - "build": ? Next.js 16.2.1 (Turbopack)
+Step #1 - "build":
+Step #1 - "build":   Creating an optimized production build ...
+Step #1 - "build": ? Compiled successfully in 10.4s
+Step #1 - "build":   Running TypeScript ...
+Step #1 - "build":   Finished TypeScript in 5.3s ...
+Step #1 - "build":   Collecting page data using 1 worker ...
+Step #1 - "build": Error: GEMINI_API_KEY environment variable is not defined
+Step #1 - "build":     at module evaluation (.next/server/edge/chunks/[root-of-the-server]__0lc8i-6._.js:12:74774)
+Step #1 - "build":
+Step #1 - "build": > Build error occurred
+Step #1 - "build": Error: Failed to collect page data for /api/triage
+Step #1 - "build":     at ignore-listed frames {
+Step #1 - "build":   type: 'Error'
+Step #1 - "build": }
+Step #1 - "build": NOTE: Running the default build script can be skipped by passing the empty environment variable "GOOGLE_NODE_RUN_SCRIPTS=" to the build
+Step #1 - "build": --------------------------------------------------------------------------------
+Step #1 - "build": Sorry your project couldn't be built.
+Step #1 - "build": Our documentation explains ways to configure Buildpacks to better recognise your project:
+Step #1 - "build":  -> https://cloud.google.com/docs/buildpacks/overview
+Step #1 - "build": If you think you've found an issue, please report it:
+Step #1 - "build":  -> https://github.com/GoogleCloudPlatform/buildpacks/issues/new
+Step #1 - "build": --------------------------------------------------------------------------------
+Step #1 - "build": ERROR: failed to build: exit status 1
+Finished Step #1 - "build"
+ERROR
+ERROR: build step 1 "us-central1-docker.pkg.dev/serverless-runtimes/google-24-full/builder/universal:universal_builder_20260318_RC00" failed: step exited with non-zero status: 51
+------------------------------------------------------------------------

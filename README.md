@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AURA BRIDGE 🚨
 
-## Getting Started
+**Aura Bridge** is a universal emergency data connector that transforms messy, unstructured data (images of accidents, frantic text, and voice transcripts) into structured, prioritized, and life-saving action steps. It is built natively for speed and accessibility, utilizing agentic AI to triage critical situations instantly.
 
-First, run the development server:
+This project was built during the SuperHack 2025 sprint.
+
+## 🚀 Features
+
+- **Agentic AI Triage**: Powered by **Gemini 1.5 Flash** for high-speed reasoning and information extraction.
+- **Multimodal Panic Intake**: Accepts raw text or drag-and-drop "panic photos".
+- **Deterministic Output**: Uses a strict fallback safety layer to ensure JSON-structured emergency checklists never fail.
+- **High-Contrast "Panic UI"**: Accessibility-first design (`text-2xl` scales) to maximize legibility in high-stress, low-visibility scenarios.
+- **Instant Transmission**: Easily share technical Medic Briefs securely to WhatsApp or download as offline logs.
+- **Live Triangulation Mock**: Integrated Google Maps for incident location awareness.
+
+## 🛠️ Technology Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **AI Engine**: Google Generative AI (`@google/generative-ai`)
+- **Styling**: Tailwind CSS v4 (Custom Emergency Tokens)
+- **Animations**: Framer Motion
+- **Deployment**: Google Cloud Run
+
+## 🔌 Environment Setup
+
+Create a `.env.local` file with the following variables:
+
+```bash
+GEMINI_API_KEY="your_google_ai_studio_key"
+NEXT_PUBLIC_GOOGLE_MAPS_KEY="your_google_maps_key"
+```
+
+## 🏁 Getting Started
+
+Run the development server locally:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) to access the Panic Intake UI.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ☁️ Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project is configured for continuous deployment on **Google Cloud Run**.
 
-## Learn More
+```bash
+gcloud run deploy aura-bridge \
+  --source . \
+  --project YOUR_PROJECT_ID \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars "GEMINI_API_KEY=...,NEXT_PUBLIC_GOOGLE_MAPS_KEY=..."
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛡️ Hackathon Goals
+- **Problem**: Critical time is wasted deciphering disorganized panic signals.
+- **Solution**: An agentic bridge that structures "the noise" and tells the user what to do immediately.
+- **USP**: Human-in-the-loop actioning, closed-loop processing, and extreme-accessibility UI design.
