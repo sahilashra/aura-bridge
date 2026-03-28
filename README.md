@@ -6,7 +6,7 @@ This project was built during the SuperHack 2025 sprint.
 
 ## 🚀 Features
 
-- **Agentic AI Triage**: Powered by **Gemini 1.5 Flash** for high-speed reasoning and information extraction.
+- **Agentic AI Triage**: Powered by **Gemini 2.5 Flash** for high-speed reasoning and information extraction.
 - **Multimodal Panic Intake**: Accepts raw text or drag-and-drop "panic photos".
 - **Deterministic Output**: Uses a strict fallback safety layer to ensure JSON-structured emergency checklists never fail.
 - **High-Contrast "Panic UI"**: Accessibility-first design (`text-2xl` scales) to maximize legibility in high-stress, low-visibility scenarios.
@@ -16,7 +16,7 @@ This project was built during the SuperHack 2025 sprint.
 ## 🛠️ Technology Stack
 
 - **Framework**: Next.js 14 (App Router)
-- **AI Engine**: Google Generative AI (`@google/generative-ai`)
+- **AI Engine**: Google Generative AI (`@google/generative-ai` models/gemini-2.5-flash)
 - **Styling**: Tailwind CSS v4 (Custom Emergency Tokens)
 - **Animations**: Framer Motion
 - **Deployment**: Google Cloud Run

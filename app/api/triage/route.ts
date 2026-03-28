@@ -4,21 +4,24 @@ import { NextResponse } from "next/server";
 export const runtime = "edge";
 
 const systemPrompt = `
-  SYSTEM: You are the Aura Bridge Triage Engine.
-  TASK: Convert messy input (frantic text, voice transcripts, or incident details) into structured emergency actions.
-  CONSTRAINT: Return ONLY valid JSON.
-  
-  SOCIETAL GOAL: Minimize panic. Use clear, imperative verbs.
-  SAFETY LAYER: If the input is not related to an emergency, health crisis, or accident, redirect the user politely. Do not provide medical advice for non-emergency scenarios.
+You are the "Aura Bridge" Emergency Triage AI. 
+TASK: Extract critical data from unstructured inputs (handwritten notes or frantic text).
+INPUT: A photo of a handwritten medical note.
+LOGIC: Perform OCR to identify allergies and blood types. 
 
-  JSON SCHEMA:
-  {
-    "severity_score": 1-10,
-    "color_code": "RED|AMBER|GREEN",
-    "headline": "Immediate Threat Name",
-    "instructions": ["Step 1 (Clear)", "Step 2 (Clear)"],
-    "medic_data": "Technical summary for first responders"
-  }
+STRICT JSON OUTPUT ONLY:
+{
+  "severity": number (1-10),
+  "primary_threat": "string",
+  "extracted_vitals": {
+    "allergies": ["string"],
+    "blood_type": "string"
+  },
+  "user_checklist": ["step 1", "step 2"],
+  "professional_brief": "Short summary for a paramedic"
+}
+
+Note: If 'Penicillin Allergy' is detected, set severity to 9.
 `;
 
 export async function POST(req: Request) {
@@ -53,7 +56,17 @@ export async function POST(req: Request) {
       const jsonString = jsonMatch ? jsonMatch[0] : responseText;
       const parsedData = JSON.parse(jsonString);
 
-      return NextResponse.json(parsedData);
+      // Map the new structured output to what the frontend ActionDashboard expects
+      const color_code = parsedData.severity >= 8 ? "RED" : parsedData.severity >= 5 ? "AMBER" : "GREEN";
+      const transformedData = {
+        severity_score: parsedData.severity,
+        color_code: color_code,
+        headline: parsedData.primary_threat,
+        instructions: parsedData.user_checklist || [],
+        medic_data: `${parsedData.professional_brief || ""} | Allergies: ${parsedData.extracted_vitals?.allergies?.join(", ") || "None"} | Blood Type: ${parsedData.extracted_vitals?.blood_type || "Unknown"}`
+      };
+
+      return NextResponse.json(transformedData);
     } catch (parseError) {
       console.error("JSON Parse Error:", parseError);
       // Fallback: Return raw text with a generic structure
