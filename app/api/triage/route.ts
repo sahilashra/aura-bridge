@@ -1,27 +1,34 @@
 import { model } from "@/lib/gemini";
 import { NextResponse } from "next/server";
+import { saveIncident } from "@/lib/firestore";
 
 export const runtime = "nodejs";
 
 const systemPrompt = `
 You are the "Aura Bridge" Emergency Triage AI. 
-TASK: Extract critical data from unstructured inputs (handwritten notes or frantic text).
-INPUT: A photo of a handwritten medical note.
-LOGIC: Perform OCR to identify allergies and blood types. 
+TASK: Extract critical data from unstructured inputs (handwritten notes, frantic text, or images).
+LOGIC: Perform OCR if image input. Identify allergies, blood types, location, and threats. 
 
-STRICT JSON OUTPUT ONLY:
+STRICT JSON OUTPUT ONLY — no markdown, no explanation:
 {
-  "severity": number (1-10),
-  "primary_threat": "string",
+  "severity": number (1-10, where 10 is immediately life-threatening),
+  "primary_threat": "concise string describing the main emergency",
+  "confidence_score": number (0-100, your confidence in this assessment),
+  "location": "city or address extracted from the incident text. Default to 'New Delhi, India' if not found.",
   "extracted_vitals": {
     "allergies": ["string"],
-    "blood_type": "string"
+    "blood_type": "string or Unknown"
   },
-  "user_checklist": ["step 1", "step 2"],
-  "professional_brief": "Short summary for a paramedic"
+  "user_checklist": ["actionable step 1", "actionable step 2", "actionable step 3", "step 4", "step 5"],
+  "suggested_resources": ["relevant emergency resource e.g. Trauma Center, Poison Control: 1800-116-117"],
+  "professional_brief": "Short 1-2 sentence summary for a paramedic"
 }
 
-Note: If 'Penicillin Allergy' is detected, set severity to 9.
+Rules:
+- If Penicillin allergy is detected, set severity >= 9.
+- user_checklist must have 5 actionable steps in order of priority.
+- suggested_resources should list 2-3 relevant real-world contacts or facilities.
+- location must be a real place name usable in Google Maps.
 `;
 
 const rateLimitMap = new Map<string, { count: number, timestamp: number }>();
@@ -61,7 +68,6 @@ export async function POST(req: Request) {
 
     if (images && images.length > 0) {
       images.forEach((img: { inlineData: { data: string; mimeType: string } }) => {
-        // Size validation (~5MB base64 check)
         if (img.inlineData.data.length > 5 * 1024 * 1024 * 1.34) {
              throw new Error("Image payload too large.");
         }
@@ -76,36 +82,53 @@ export async function POST(req: Request) {
     const responseText = result.response.text();
     console.log("Raw Gemini Response:", responseText);
 
-    // Schema Validation & Cleanup
     try {
-      // Find JSON block if it exists (Gemini might wrap in ```json)
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : responseText;
       const parsedData = JSON.parse(jsonString);
 
-      const map_key = process.env.GOOGLE_MAPS_KEY || "YOUR_GOOGLE_MAPS_KEY_HERE";
-      const map_url = `https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=15&size=400x200&scale=2&maptype=roadmap&markers=color:red%7C40.714728,-73.998672&style=feature:all|element:labels.text.fill|color:0x8ec3b9&style=feature:all|element:labels.text.stroke|color:0x1a3646&style=feature:landscape|element:geometry|color:0x2c5a71&style=feature:water|element:geometry|color:0x0e171d&key=${map_key}`;
+      // Dynamic Maps using extracted location
+      const map_key = process.env.GOOGLE_MAPS_KEY || "";
+      const location = parsedData.location || "New Delhi, India";
+      const encodedLocation = encodeURIComponent(location);
+      const map_url = map_key
+        ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=400x200&scale=2&maptype=roadmap&markers=color:red%7C${encodedLocation}&style=feature:all|element:labels.text.fill|color:0x8ec3b9&style=feature:all|element:labels.text.stroke|color:0x1a3646&style=feature:landscape|element:geometry|color:0x2c5a71&style=feature:water|element:geometry|color:0x0e171d&key=${map_key}`
+        : "";
 
-      // Map the new structured output to what the frontend ActionDashboard expects
       const color_code = parsedData.severity >= 8 ? "RED" : parsedData.severity >= 5 ? "AMBER" : "GREEN";
+      
       const transformedData = {
         severity_score: parsedData.severity,
+        confidence_score: parsedData.confidence_score || 80,
         color_code: color_code,
         headline: parsedData.primary_threat,
+        location: location,
         instructions: parsedData.user_checklist || [],
+        suggested_resources: parsedData.suggested_resources || [],
         map_url: map_url,
         medic_data: `${parsedData.professional_brief || ""} | Allergies: ${parsedData.extracted_vitals?.allergies?.join(", ") || "None"} | Blood Type: ${parsedData.extracted_vitals?.blood_type || "Unknown"}`
       };
+
+      // Save to Firestore (non-blocking — don't let this fail the response)
+      saveIncident({
+        severity: parsedData.severity,
+        headline: parsedData.primary_threat,
+        location: location,
+        timestamp: new Date().toISOString(),
+      }).catch((e: any) => console.warn("Firestore save failed (non-critical):", e.message));
 
       return NextResponse.json(transformedData);
     } catch (parseError) {
       console.error("JSON Parse Error:", parseError);
       return NextResponse.json({
         severity_score: 5,
+        confidence_score: 40,
         color_code: "AMBER",
-        headline: "Analysis error",
+        headline: "Analysis error — please retry",
+        location: "Unknown",
         map_url: "",
         instructions: ["Fallback: Raw response parsing failed", responseText.substring(0, 100)],
+        suggested_resources: [],
         medic_data: responseText,
         is_fallback: true
       });

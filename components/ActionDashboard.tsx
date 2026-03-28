@@ -8,7 +8,9 @@ import {
   FileDown, 
   Info,
   Copy,
-  RotateCcw
+  RotateCcw,
+  Zap,
+  Shield
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
@@ -18,12 +20,15 @@ import jsPDF from 'jspdf';
 interface ActionDashboardProps {
   data: {
     severity_score: number;
+    confidence_score?: number;
     color_code: "RED" | "AMBER" | "GREEN";
     headline: string;
     instructions: string[];
     medic_data: string;
     is_fallback?: boolean;
     map_url?: string;
+    location?: string;
+    suggested_resources?: string[];
   };
   onReset: () => void;
 }
@@ -39,21 +44,21 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
   };
 
   const getSeverityColorHex = (score: number) => {
-    if (score >= 7) return "#e63946"; // primary red
-    if (score >= 4) return "#f59e0b"; // amber
-    return "#2a9d8f"; // success teal
+    if (score >= 7) return "#e63946";
+    if (score >= 4) return "#f59e0b";
+    return "#2a9d8f";
   };
 
   const severityColorHex = getSeverityColorHex(data.severity_score);
 
   const shareToWhatsApp = () => {
-    const text = `⚠️ AURA BRIDGE EMERGENCY ALERT\n\nIncident: ${data.headline}\nSeverity: ${data.severity_score}/10\n\nInstructions:\n${data.instructions.map((s,i) => `[${checkedItems.has(i)?'x':' '}] ${s}`).join('\n')}\n\nMedic Data:\n${data.medic_data}`;
+    const text = `⚠️ AURA BRIDGE EMERGENCY ALERT\n\nIncident: ${data.headline}\nSeverity: ${data.severity_score}/10\nLocation: ${data.location || "Unknown"}\n\nInstructions:\n${data.instructions.map((s,i) => `[${checkedItems.has(i)?'x':' '}] ${s}`).join('\n')}\n\nMedic Data:\n${data.medic_data}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
 
   const copyReport = () => {
-    const text = `AURA BRIDGE EMERGENCY ALERT\nIncident: ${data.headline}\nSeverity: ${data.severity_score}/10\n\nInstructions:\n${data.instructions.map((s,i) => `[${checkedItems.has(i)?'x':' '}] ${s}`).join('\n')}\n\nMedic Data:\n${data.medic_data}`;
+    const text = `AURA BRIDGE EMERGENCY ALERT\nIncident: ${data.headline}\nSeverity: ${data.severity_score}/10\nLocation: ${data.location || "Unknown"}\n\nInstructions:\n${data.instructions.map((s,i) => `[${checkedItems.has(i)?'x':' '}] ${s}`).join('\n')}\n\nMedic Data:\n${data.medic_data}`;
     navigator.clipboard.writeText(text);
     alert("Report copied to clipboard.");
   };
@@ -63,23 +68,21 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
     doc.setFontSize(22);
     doc.setTextColor(230, 57, 70);
     doc.text("AURA BRIDGE EMERGENCY REPORT", 20, 20);
-    
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
     doc.text(`Incident: ${data.headline}`, 20, 35);
     doc.text(`Severity Score: ${data.severity_score}/10`, 20, 45);
-    
+    doc.text(`Location: ${data.location || "Unknown"}`, 20, 55);
     doc.setFontSize(16);
-    doc.text("Action Checklist:", 20, 60);
+    doc.text("Action Checklist:", 20, 68);
     doc.setFontSize(12);
-    let y = 70;
+    let y = 78;
     data.instructions.forEach((step, idx) => {
       const status = checkedItems.has(idx) ? "[DONE]" : "[PENDING]";
       const lines = doc.splitTextToSize(`${status} ${step}`, 170);
       doc.text(lines, 20, y);
       y += lines.length * 7;
     });
-
     y += 10;
     doc.setFontSize(16);
     doc.text("Medic Technical Brief:", 20, y);
@@ -87,7 +90,6 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
     y += 10;
     const medicLines = doc.splitTextToSize(data.medic_data, 170);
     doc.text(medicLines, 20, y);
-    
     doc.save(`AuraBridge_Report_${Date.now()}.pdf`);
   };
 
@@ -108,8 +110,17 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
         
         {/* LEFT COLUMN: Severity & Diagnosis */}
         <div className="bg-surface border border-surface-border p-6 rounded-2xl flex flex-col items-center text-center shadow-lg" role="alert" aria-live="assertive">
-          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-6">Threat Assessment</h3>
-          <div className="w-48 h-48 mb-6 relative" aria-label={`Severity Score ${data.severity_score} out of 10`}>
+          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">Threat Assessment</h3>
+          
+          {/* Confidence Badge */}
+          {data.confidence_score !== undefined && (
+            <div className="flex items-center gap-2 mb-4 bg-[#161f33] border border-surface-border px-3 py-1.5 rounded-full">
+              <Shield size={12} className="text-secondary" />
+              <span className="text-xs font-mono text-slate-300">AI Confidence: <strong className="text-white">{data.confidence_score}%</strong></span>
+            </div>
+          )}
+
+          <div className="w-44 h-44 mb-5 relative" aria-label={`Severity Score ${data.severity_score} out of 10`}>
             <CircularProgressbar 
               value={(data.severity_score / 10) * 100} 
               text={`${data.severity_score}/10`}
@@ -121,12 +132,12 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
               })}
             />
             {data.severity_score >= 8 && (
-                <div className="absolute -bottom-2 w-full text-center text-xs font-bold bg-[#e63946] text-white py-1 rounded-full animate-pulse">
-                  CRITICAL
-                </div>
+              <div className="absolute -bottom-2 w-full text-center text-xs font-bold bg-[#e63946] text-white py-1 rounded-full animate-pulse">
+                CRITICAL
+              </div>
             )}
           </div>
-          <h1 className="text-2xl font-bold leading-tight text-white mb-2">{data.headline}</h1>
+          <h1 className="text-xl font-bold leading-tight text-white mb-2">{data.headline}</h1>
           {data.is_fallback && (
             <div className="mt-4 text-[#f59e0b] text-xs font-mono uppercase bg-[#f59e0b]/10 px-3 py-1 rounded">
                Fallback Rules Engaged
@@ -136,23 +147,23 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
 
         {/* CENTER COLUMN: Action Checklist */}
         <div className="bg-surface border border-surface-border p-6 rounded-2xl shadow-lg flex flex-col">
-          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-6 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
             <span>Prioritized Protocol</span>
             <span className="font-mono text-xs">{checkedItems.size}/{data.instructions.length}</span>
           </h3>
-          <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+          <div className="space-y-3 overflow-y-auto pr-1 flex-1">
             {data.instructions.map((step, idx) => (
               <motion.button 
                 key={idx}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
+                transition={{ delay: idx * 0.08 }}
                 onClick={() => toggleCheck(idx)}
-                aria-label={`Mark check list item ${idx + 1} as ${checkedItems.has(idx) ? 'incomplete' : 'complete'}`}
-                className={`w-full text-left flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all focus-visible:outline ${checkedItems.has(idx) ? 'bg-success/10 border-success/30 opacity-70' : 'bg-[#161f33] border-surface-border hover:border-slate-500'}`}
+                aria-label={`Mark step ${idx + 1} as ${checkedItems.has(idx) ? 'incomplete' : 'complete'}`}
+                className={`w-full text-left flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-all ${checkedItems.has(idx) ? 'bg-success/10 border-success/30 opacity-70' : 'bg-[#161f33] border-surface-border hover:border-slate-500'}`}
               >
                 <div className={`mt-0.5 shrink-0 ${checkedItems.has(idx) ? 'text-success' : 'text-slate-500'}`}>
-                  <CheckCircle2 size={24} className={checkedItems.has(idx) ? 'fill-success/20' : ''}/>
+                  <CheckCircle2 size={20} className={checkedItems.has(idx) ? 'fill-success/20' : ''}/>
                 </div>
                 <p className={`text-sm ${checkedItems.has(idx) ? 'text-slate-400 line-through decoration-slate-500' : 'text-slate-200'}`}>
                   {step}
@@ -162,37 +173,57 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Vitals & Map */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-surface border border-surface-border p-6 rounded-2xl shadow-lg flex-1">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Info size={16} className="text-secondary" /> Extracted Context
+        {/* RIGHT COLUMN: Vitals, Resources & Map */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-surface border border-surface-border p-5 rounded-2xl shadow-lg">
+            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Info size={14} className="text-secondary" /> Extracted Context
             </h3>
-            <div className="bg-[#161f33] p-4 rounded-xl border border-surface-border text-sm font-mono text-slate-300 h-40 overflow-y-auto" tabIndex={0} aria-label="Extracted Context data">
+            <div className="bg-[#161f33] p-3 rounded-xl border border-surface-border text-xs font-mono text-slate-300 h-24 overflow-y-auto" tabIndex={0} aria-label="Extracted Context data">
               {data.medic_data}
             </div>
           </div>
+
+          {/* Suggested Resources */}
+          {data.suggested_resources && data.suggested_resources.length > 0 && (
+            <div className="bg-surface border border-surface-border p-5 rounded-2xl shadow-lg">
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <Zap size={14} className="text-primary" /> Suggested Resources
+              </h3>
+              <ul className="space-y-2">
+                {data.suggested_resources.map((r, i) => (
+                  <li key={i} className="text-xs text-slate-300 bg-[#161f33] border border-surface-border px-3 py-2 rounded-lg flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-primary rounded-full shrink-0"></span>
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           
-          <div className="bg-surface border border-surface-border p-2 rounded-2xl shadow-lg relative overflow-hidden h-48 group">
-             {data.map_url && (
-             <img 
-              src={data.map_url}
-              alt="Incident Location map"
-              className="w-full h-full object-cover rounded-xl transition-transform duration-700 group-hover:scale-105"
-            />
-             )}
-            <div className="absolute bottom-4 left-4 right-4 bg-surface/90 backdrop-blur-sm p-3 border border-surface-border rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin size={16} className="text-primary" />
-                <span className="font-mono text-[10px] text-slate-300">ESTIMATED LOCATION</span>
+          {/* Dynamic Map */}
+          <div className="bg-surface border border-surface-border p-2 rounded-2xl shadow-lg relative overflow-hidden flex-1 min-h-36 group">
+            {data.map_url ? (
+              <img 
+                src={data.map_url}
+                alt={`Map of incident location: ${data.location || 'Unknown'}`}
+                className="w-full h-full object-cover rounded-xl transition-transform duration-700 group-hover:scale-105 min-h-32"
+              />
+            ) : (
+              <div className="w-full h-32 bg-[#161f33] rounded-xl flex items-center justify-center">
+                <MapPin size={24} className="text-slate-600" />
               </div>
+            )}
+            <div className="absolute bottom-3 left-3 right-3 bg-surface/90 backdrop-blur-sm p-2 border border-surface-border rounded-lg flex items-center gap-2">
+              <MapPin size={14} className="text-primary shrink-0" />
+              <span className="font-mono text-[10px] text-slate-300 truncate">{data.location || "ESTIMATED LOCATION"}</span>
             </div>
           </div>
         </div>
 
       </div>
 
-      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-20">
+      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <button 
           onClick={copyReport}
           aria-label="Copy report text"
@@ -209,7 +240,7 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
         </button>
         <button 
           onClick={shareToWhatsApp}
-          aria-label="Share strictly to WhatsApp"
+          aria-label="Share to WhatsApp"
           className="flex items-center justify-center gap-2 w-full py-4 bg-success hover:bg-[#208276] text-white rounded-xl font-semibold transition-colors shadow-lg shadow-success/20"
         >
           <Share2 size={20} /> Transmit to Responder
