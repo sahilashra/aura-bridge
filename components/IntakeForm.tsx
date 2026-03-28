@@ -64,11 +64,13 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
     }, 15000);
   };
 
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    onLoading(true);
+    setIsProcessingFile(true);
     setError(null);
 
     const newImages: string[] = [];
@@ -83,7 +85,7 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
       newImages.push(base64 as string);
     }
     setImagesBase64((prev) => [...prev, ...newImages]);
-    onLoading(false);
+    setIsProcessingFile(false);
     if(newImages.length > 0) setActiveTab("photo");
   };
 

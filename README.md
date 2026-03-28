@@ -21,10 +21,11 @@ graph TD
 *   **Google Maps Static API** (Incident Triangulation)
 
 ## 📸 Screenshots
-*(Add Live dashboard screenshots here)*
-- Multimodal Ops Intake
-- Threat Assessment Dashboard
-- PDF Log Export
+*(Simply drop these images into your project root or public folder and rename to match below, or change the paths)*
+
+![Multimodal Ops Intake](screenshot-intake.png)
+![Threat Assessment Dashboard](screenshot-dashboard.png)
+![PDF Log Export](screenshot-pdf.png)
 
 ## 🚀 Features
 
