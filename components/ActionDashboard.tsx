@@ -174,7 +174,7 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
           
           <div className="bg-surface border border-surface-border p-2 rounded-2xl shadow-lg relative overflow-hidden h-48 group">
              <img 
-              src={`https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=15&size=400x200&scale=2&maptype=roadmap&markers=color:red%7C40.714728,-73.998672&style=feature:all|element:labels.text.fill|color:0x8ec3b9&style=feature:all|element:labels.text.stroke|color:0x1a3646&style=feature:landscape|element:geometry|color:0x2c5a71&style=feature:water|element:geometry|color:0x0e171d&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || 'AIzaSyBMn2-92T4ILzI5TjRSSOzaAqlPXtJOwLc'}`}
+              src={`https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=15&size=400x200&scale=2&maptype=roadmap&markers=color:red%7C40.714728,-73.998672&style=feature:all|element:labels.text.fill|color:0x8ec3b9&style=feature:all|element:labels.text.stroke|color:0x1a3646&style=feature:landscape|element:geometry|color:0x2c5a71&style=feature:water|element:geometry|color:0x0e171d&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || 'YOUR_GOOGLE_MAPS_KEY_HERE'}`}
               alt="Incident Location map"
               className="w-full h-full object-cover rounded-xl transition-transform duration-700 group-hover:scale-105"
             />
