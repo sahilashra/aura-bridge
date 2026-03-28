@@ -70,10 +70,7 @@ export async function POST(req: Request) {
     }
 
     const result = await model.generateContent({
-      contents: [{ role: "user", parts: contents }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      }
+      contents: [{ role: "user", parts: contents }]
     });
 
     const responseText = result.response.text();
@@ -81,7 +78,10 @@ export async function POST(req: Request) {
 
     // Schema Validation & Cleanup
     try {
-      const parsedData = JSON.parse(responseText);
+      // Find JSON block if it exists (Gemini might wrap in ```json)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : responseText;
+      const parsedData = JSON.parse(jsonString);
 
       // Map the new structured output to what the frontend ActionDashboard expects
       const color_code = parsedData.severity >= 8 ? "RED" : parsedData.severity >= 5 ? "AMBER" : "GREEN";
