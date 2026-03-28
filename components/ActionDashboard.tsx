@@ -4,10 +4,8 @@ import React, { useState } from "react";
 import { 
   CheckCircle2, 
   MapPin, 
-  ShieldCheck, 
   Share2, 
   FileDown, 
-  AlertTriangle,
   Info,
   Copy,
   RotateCcw
@@ -25,6 +23,7 @@ interface ActionDashboardProps {
     instructions: string[];
     medic_data: string;
     is_fallback?: boolean;
+    map_url?: string;
   };
   onReset: () => void;
 }
@@ -98,6 +97,7 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
         <h2 className="text-2xl font-bold">Incident Operations View</h2>
         <button 
           onClick={onReset}
+          aria-label="Start new intake"
           className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm px-4 py-2 border border-surface-border rounded-md bg-surface"
         >
           <RotateCcw size={16} /> New Intake
@@ -107,9 +107,9 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
       <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
         {/* LEFT COLUMN: Severity & Diagnosis */}
-        <div className="bg-surface border border-surface-border p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
+        <div className="bg-surface border border-surface-border p-6 rounded-2xl flex flex-col items-center text-center shadow-lg" role="alert" aria-live="assertive">
           <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-6">Threat Assessment</h3>
-          <div className="w-48 h-48 mb-6 relative">
+          <div className="w-48 h-48 mb-6 relative" aria-label={`Severity Score ${data.severity_score} out of 10`}>
             <CircularProgressbar 
               value={(data.severity_score / 10) * 100} 
               text={`${data.severity_score}/10`}
@@ -121,7 +121,7 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
               })}
             />
             {data.severity_score >= 8 && (
-                <div role="alert" className="absolute -bottom-2 w-full text-center text-xs font-bold bg-[#e63946] text-white py-1 rounded-full animate-pulse">
+                <div className="absolute -bottom-2 w-full text-center text-xs font-bold bg-[#e63946] text-white py-1 rounded-full animate-pulse">
                   CRITICAL
                 </div>
             )}
@@ -142,13 +142,14 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
           </h3>
           <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
             {data.instructions.map((step, idx) => (
-              <motion.div 
+              <motion.button 
                 key={idx}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.1 }}
                 onClick={() => toggleCheck(idx)}
-                className={`flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all ${checkedItems.has(idx) ? 'bg-success/10 border-success/30 opacity-70' : 'bg-[#161f33] border-surface-border hover:border-slate-500'}`}
+                aria-label={`Mark check list item ${idx + 1} as ${checkedItems.has(idx) ? 'incomplete' : 'complete'}`}
+                className={`w-full text-left flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all focus-visible:outline ${checkedItems.has(idx) ? 'bg-success/10 border-success/30 opacity-70' : 'bg-[#161f33] border-surface-border hover:border-slate-500'}`}
               >
                 <div className={`mt-0.5 shrink-0 ${checkedItems.has(idx) ? 'text-success' : 'text-slate-500'}`}>
                   <CheckCircle2 size={24} className={checkedItems.has(idx) ? 'fill-success/20' : ''}/>
@@ -156,7 +157,7 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
                 <p className={`text-sm ${checkedItems.has(idx) ? 'text-slate-400 line-through decoration-slate-500' : 'text-slate-200'}`}>
                   {step}
                 </p>
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -167,17 +168,19 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
               <Info size={16} className="text-secondary" /> Extracted Context
             </h3>
-            <div className="bg-[#161f33] p-4 rounded-xl border border-surface-border text-sm font-mono text-slate-300 h-40 overflow-y-auto">
+            <div className="bg-[#161f33] p-4 rounded-xl border border-surface-border text-sm font-mono text-slate-300 h-40 overflow-y-auto" tabIndex={0} aria-label="Extracted Context data">
               {data.medic_data}
             </div>
           </div>
           
           <div className="bg-surface border border-surface-border p-2 rounded-2xl shadow-lg relative overflow-hidden h-48 group">
+             {data.map_url && (
              <img 
-              src={`https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=15&size=400x200&scale=2&maptype=roadmap&markers=color:red%7C40.714728,-73.998672&style=feature:all|element:labels.text.fill|color:0x8ec3b9&style=feature:all|element:labels.text.stroke|color:0x1a3646&style=feature:landscape|element:geometry|color:0x2c5a71&style=feature:water|element:geometry|color:0x0e171d&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || 'YOUR_GOOGLE_MAPS_KEY_HERE'}`}
+              src={data.map_url}
               alt="Incident Location map"
               className="w-full h-full object-cover rounded-xl transition-transform duration-700 group-hover:scale-105"
             />
+             )}
             <div className="absolute bottom-4 left-4 right-4 bg-surface/90 backdrop-blur-sm p-3 border border-surface-border rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MapPin size={16} className="text-primary" />
@@ -192,18 +195,21 @@ const ActionDashboard: React.FC<ActionDashboardProps> = ({ data, onReset }) => {
       <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-20">
         <button 
           onClick={copyReport}
+          aria-label="Copy report text"
           className="flex items-center justify-center gap-2 w-full py-4 border border-surface-border bg-surface hover:bg-[#161f33] rounded-xl font-semibold text-slate-300 transition-colors"
         >
           <Copy size={20} /> Copy Report Text
         </button>
         <button 
           onClick={downloadPDF}
+          aria-label="Download PDF Log"
           className="flex items-center justify-center gap-2 w-full py-4 border border-surface-border bg-surface hover:bg-[#161f33] rounded-xl font-semibold text-slate-300 transition-colors"
         >
           <FileDown size={20} /> Export PDF Log
         </button>
         <button 
           onClick={shareToWhatsApp}
+          aria-label="Share strictly to WhatsApp"
           className="flex items-center justify-center gap-2 w-full py-4 bg-success hover:bg-[#208276] text-white rounded-xl font-semibold transition-colors shadow-lg shadow-success/20"
         >
           <Share2 size={20} /> Transmit to Responder

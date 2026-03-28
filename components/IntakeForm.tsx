@@ -149,17 +149,17 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
         <h2 className="text-2xl font-bold tracking-tight text-white">New Emergency Report</h2>
       </div>
 
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-        <button onClick={() => setActiveTab("text")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'text' ? 'bg-surface-border text-white' : 'text-slate-400 hover:text-white'}`}>
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2" role="tablist">
+        <button role="tab" aria-selected={activeTab === 'text'} aria-label="Input Text mode" onClick={() => setActiveTab("text")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'text' ? 'bg-surface-border text-white' : 'text-slate-400 hover:text-white'}`}>
           <Type size={16} /> Text
         </button>
-        <button onClick={() => setActiveTab("photo")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'photo' ? 'bg-surface-border text-white' : 'text-slate-400 hover:text-white'}`}>
+        <button role="tab" aria-selected={activeTab === 'photo'} aria-label="Input Photo mode" onClick={() => setActiveTab("photo")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'photo' ? 'bg-surface-border text-white' : 'text-slate-400 hover:text-white'}`}>
           <Camera size={16} /> Photo
         </button>
-        <button onClick={() => setActiveTab("voice")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'voice' ? 'bg-surface-border text-white' : 'text-slate-400 hover:text-white'}`}>
+        <button role="tab" aria-selected={activeTab === 'voice'} aria-label="Input Voice mode" onClick={() => setActiveTab("voice")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'voice' ? 'bg-surface-border text-white' : 'text-slate-400 hover:text-white'}`}>
           <Mic size={16} /> Voice
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-slate-500 cursor-not-allowed">
+        <button role="tab" aria-selected={activeTab === 'doc'} aria-disabled="true" aria-label="Input Document mode coming soon" className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-slate-500 cursor-not-allowed">
           <Paperclip size={16} /> Document <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded ml-1">SOON</span>
         </button>
       </div>
@@ -168,18 +168,20 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
         {activeTab !== "photo" ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative mb-6">
             <textarea
+              aria-label="Describe the emergency incident"
               className="w-full h-40 bg-[#161f33] text-white p-4 text-base border-2 border-surface-border focus:border-primary rounded-xl outline-none placeholder:text-slate-500 transition-all font-sans resize-none"
               placeholder="Describe the incident... (e.g. 'Car crash on HW-10, heavy bleeding, unresponsive...')"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
             />
-            <div className="absolute bottom-4 right-4 text-xs font-mono text-slate-500">
+            <div className="absolute bottom-4 right-4 text-xs font-mono text-slate-500" aria-live="polite">
               {inputText.length} chars
             </div>
             {activeTab === "voice" && (
                 <div className="absolute top-4 right-4">
                   <button 
                     onClick={startListening} 
+                    aria-label={isListening ? 'Stop Listening' : 'Record Voice'}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${isListening ? 'bg-primary text-white animate-pulse' : 'bg-surface-border text-white'}`}
                   >
                     <Mic size={14} /> {isListening ? 'Listening...' : 'Record Voice'}
@@ -193,13 +195,17 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
               onDragOver={(e) => e.preventDefault()} 
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') fileInputRef.current?.click() }}
+              aria-label="Drag and drop photo here or click to upload"
               className="w-full border-2 border-dashed border-slate-600 hover:border-primary rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-colors bg-[#161f33]"
             >
               <Camera size={40} className="text-slate-500 mb-4" />
               <p className="text-slate-400">Drag photo here or click to upload</p>
               <p className="text-xs text-slate-500 mt-2 font-mono">Max 5MB per image</p>
             </div>
-            <input type="file" hidden ref={fileInputRef} multiple accept="image/*" onChange={handleFileChange} />
+            <input type="file" hidden ref={fileInputRef} multiple accept="image/*" aria-label="File upload" onChange={handleFileChange} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -210,7 +216,8 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
             <div key={idx} className="relative w-24 h-24 border border-surface-border rounded-lg overflow-hidden shadow-sm">
               <img src={img} alt="Incident" className="w-full h-full object-cover" />
               <button 
-                onClick={() => setImagesBase64(prev => prev.filter((_, i) => i !== idx))} 
+                onClick={() => setImagesBase64(prev => prev.filter((_, i) => i !== idx))}
+                aria-label="Remove image"
                 className="absolute top-1 right-1 bg-black/60 p-1 rounded-full text-white hover:bg-primary transition-colors"
               >
                 <div className="w-3 h-3 flex items-center justify-center leading-none text-xs">&times;</div>
@@ -221,7 +228,7 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
       )}
 
       {error ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-primary/10 text-primary border-l-4 border-primary p-4 text-sm mb-6 flex items-start gap-3">
+        <motion.div role="alert" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-primary/10 text-primary border-l-4 border-primary p-4 text-sm mb-6 flex items-start gap-3">
           <AlertCircle size={20} className="shrink-0 mt-0.5" />
           <span>{error}</span>
         </motion.div>
@@ -229,6 +236,7 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ onTriageResult, onLoading }) =>
 
       <button
         onClick={handleTriage}
+        aria-label="Analyze and Triage Emergency"
         className="group relative w-full bg-primary hover:bg-red-600 text-white py-4 rounded-xl flex items-center justify-center gap-3 font-semibold text-lg overflow-hidden transition-all duration-300"
       >
         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>

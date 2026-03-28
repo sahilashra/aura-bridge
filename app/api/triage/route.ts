@@ -83,6 +83,9 @@ export async function POST(req: Request) {
       const jsonString = jsonMatch ? jsonMatch[0] : responseText;
       const parsedData = JSON.parse(jsonString);
 
+      const map_key = process.env.GOOGLE_MAPS_KEY || "YOUR_GOOGLE_MAPS_KEY_HERE";
+      const map_url = `https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=15&size=400x200&scale=2&maptype=roadmap&markers=color:red%7C40.714728,-73.998672&style=feature:all|element:labels.text.fill|color:0x8ec3b9&style=feature:all|element:labels.text.stroke|color:0x1a3646&style=feature:landscape|element:geometry|color:0x2c5a71&style=feature:water|element:geometry|color:0x0e171d&key=${map_key}`;
+
       // Map the new structured output to what the frontend ActionDashboard expects
       const color_code = parsedData.severity >= 8 ? "RED" : parsedData.severity >= 5 ? "AMBER" : "GREEN";
       const transformedData = {
@@ -90,6 +93,7 @@ export async function POST(req: Request) {
         color_code: color_code,
         headline: parsedData.primary_threat,
         instructions: parsedData.user_checklist || [],
+        map_url: map_url,
         medic_data: `${parsedData.professional_brief || ""} | Allergies: ${parsedData.extracted_vitals?.allergies?.join(", ") || "None"} | Blood Type: ${parsedData.extracted_vitals?.blood_type || "Unknown"}`
       };
 
@@ -100,6 +104,7 @@ export async function POST(req: Request) {
         severity_score: 5,
         color_code: "AMBER",
         headline: "Analysis error",
+        map_url: "",
         instructions: ["Fallback: Raw response parsing failed", responseText.substring(0, 100)],
         medic_data: responseText,
         is_fallback: true
